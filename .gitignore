@@ -1,0 +1,38 @@
+# Unity 기본 불필요 디렉토리
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+[Uu]serSettings/
+Packages/
+
+# VS & Rider
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+
+# OS 관련
+.DS_Store
+Thumbs.db
+
+# Unity 패키지 및 바이너리
+*.apk
+*.aab
+*.unitypackage
+
+# 기타
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
