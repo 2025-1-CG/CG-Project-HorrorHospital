@@ -27,7 +27,6 @@ public class InteractionHandler : MonoBehaviour
             currentTarget = hit.collider.GetComponent<IInteractable>();
             if (currentTarget != null)
             {
-                Debug.Log("▶ Interactable 감지됨: " + hit.collider.name);
                 interactUI?.SetActive(true);
 
                 if (Input.GetKeyDown(interactKey))
