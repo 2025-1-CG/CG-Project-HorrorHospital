@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class SlidingDoorAuto : MonoBehaviour
 {
     public Transform leftDoor;
@@ -9,6 +10,7 @@ public class SlidingDoorAuto : MonoBehaviour
     public float closeDelay = 2f;
 
     [SerializeField] private Transform doorFacingForward;
+    public AudioClip closeSound;
 
     private Vector3 leftClosedPos, rightClosedPos;
     private Vector3 leftOpenPos, rightOpenPos;
@@ -16,6 +18,7 @@ public class SlidingDoorAuto : MonoBehaviour
     private bool shouldClose = false;
     private float timer = 0f;
     private bool hasEnteredThisLoop = false;
+    private AudioSource audioSource;
 
     void Start()
     {
@@ -25,6 +28,10 @@ public class SlidingDoorAuto : MonoBehaviour
         // 기준 방향 따라 자동 계산 (왼쪽은 -x, 오른쪽은 +x로 열림)
         leftOpenPos = leftClosedPos + Vector3.left * slideDistance;
         rightOpenPos = rightClosedPos + Vector3.right * slideDistance;
+
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f; // 3D 사운드
     }
 
     void OnTriggerEnter(Collider other)
@@ -96,6 +103,12 @@ public class SlidingDoorAuto : MonoBehaviour
         StopAllCoroutines();
         StartCoroutine(SlideTo(leftDoor, leftClosedPos));
         StartCoroutine(SlideTo(rightDoor, rightClosedPos));
+
+        // 문 닫는 소리 재생
+        if (closeSound != null)
+        {
+            audioSource.PlayOneShot(closeSound);
+        }
     }
 
     private System.Collections.IEnumerator SlideTo(Transform door, Vector3 target)
