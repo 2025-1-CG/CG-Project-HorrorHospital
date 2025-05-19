@@ -1,6 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(AudioSource))]
 public class RigidbodyFPSController : MonoBehaviour
 {
     public float moveSpeed = 5f;
@@ -8,13 +9,24 @@ public class RigidbodyFPSController : MonoBehaviour
     public Transform cameraTransform;
     public float pushPower = 2.0f; // 밀 때 전달하는 힘
 
+    public AudioClip[] footstepClips;
+    public float footstepInterval = 0.5f;
+
     private Rigidbody rb;
+    private AudioSource audioSource;
+    private float footstepTimer = 0f;
+    private bool isMoving = false;
     private float rotationX = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+
+        // AudioSource 초기화
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1.0f; // 3D 사운드
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -49,10 +61,40 @@ public class RigidbodyFPSController : MonoBehaviour
 
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
         rb.MovePosition(rb.position + move * moveSpeed * Time.fixedDeltaTime);
-    }
+  
 
-    // 충돌 시 문을 밀어주는 함수
-    private void OnCollisionEnter(Collision collision)
+    // 걷는 소리 처리
+    isMoving = move.magnitude > 0.1f;
+        if (isMoving)
+        {
+            footstepTimer -= Time.fixedDeltaTime;
+            if (footstepTimer <= 0f)
+            {
+                PlayFootstep();
+    footstepTimer = footstepInterval;
+            }
+        }
+        else
+{
+    footstepTimer = 0f; // 멈추면 타이머 초기화
+            if (audioSource.isPlaying)
+            {
+                audioSource.Stop(); // 이동 멈추면 소리 끄기
+            }
+        }
+}
+
+    void PlayFootstep()
+{
+    if (footstepClips.Length == 0) return;
+
+    int index = Random.Range(0, footstepClips.Length);
+    audioSource.clip = footstepClips[index];
+    audioSource.Play();
+}
+
+// 충돌 시 문을 밀어주는 함수
+private void OnCollisionEnter(Collision collision)
     {
         Rigidbody body = collision.rigidbody;
 
