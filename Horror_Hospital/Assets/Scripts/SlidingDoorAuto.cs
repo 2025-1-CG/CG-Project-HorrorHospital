@@ -11,6 +11,7 @@ public class SlidingDoorAuto : MonoBehaviour
 
     [SerializeField] private Transform doorFacingForward;
     public AudioClip closeSound;
+    public AudioClip openSound;
 
     private Vector3 leftClosedPos, rightClosedPos;
     private Vector3 leftOpenPos, rightOpenPos;
@@ -19,6 +20,8 @@ public class SlidingDoorAuto : MonoBehaviour
     private float timer = 0f;
     private bool hasEnteredThisLoop = false;
     private AudioSource audioSource;
+    private bool isFullyClosed = true;
+    private bool isClosingAfterExit = false; // 퇴장 후 문이 닫히는 중인지 추적
 
     void Start()
     {
@@ -51,6 +54,9 @@ public class SlidingDoorAuto : MonoBehaviour
 
         if (isEntering)
         {
+            // 입장 시에는 퇴장 후 닫힘 상태를 리셋
+            isClosingAfterExit = false;
+            
             if (!hasEnteredThisLoop)
             {
                 Debug.Log("▶ 수술실 첫 입장 → 문 열림 후 닫힘 예약");
@@ -67,10 +73,15 @@ public class SlidingDoorAuto : MonoBehaviour
                 shouldClose = true;
             }
         }
-        else if (!isEntering && LoopManager.Instance.waitingForExit)
+        else if (!isEntering && LoopManager.Instance.currentState == GameState.WaitingForExit)
         {
             Debug.Log("▶ 퇴장 → 문 열림");
             OpenDoors();
+            
+            // 퇴장 표시
+            isClosingAfterExit = true;
+            
+            // 복도로 퇴장 처리
             LoopManager.Instance.ExitToHallway();
 
             StartCoroutine(CloseAfterDelay(closeDelay));
@@ -86,7 +97,7 @@ public class SlidingDoorAuto : MonoBehaviour
             {
                 CloseDoors();
                 shouldClose = false;
-                Debug.Log("🚪 문이 닫혔습니다.");
+                Debug.Log("🚪 문이 닫히는 중...");
             }
         }
     }
@@ -96,12 +107,19 @@ public class SlidingDoorAuto : MonoBehaviour
         StopAllCoroutines();
         StartCoroutine(SlideTo(leftDoor, leftOpenPos));
         StartCoroutine(SlideTo(rightDoor, rightOpenPos));
+        isFullyClosed = false;
+
+        // 문 여는 소리 재생
+        if (openSound != null)
+        {
+            audioSource.PlayOneShot(openSound);
+        }
     }
 
     public void CloseDoors()
     {
         StopAllCoroutines();
-        StartCoroutine(SlideTo(leftDoor, leftClosedPos));
+        StartCoroutine(SlideTo(leftDoor, leftClosedPos, OnDoorsFullyClosed));
         StartCoroutine(SlideTo(rightDoor, rightClosedPos));
 
         // 문 닫는 소리 재생
@@ -111,7 +129,7 @@ public class SlidingDoorAuto : MonoBehaviour
         }
     }
 
-    private System.Collections.IEnumerator SlideTo(Transform door, Vector3 target)
+    private System.Collections.IEnumerator SlideTo(Transform door, Vector3 target, System.Action onComplete = null)
     {
         while (Vector3.Distance(door.localPosition, target) > 0.01f)
         {
@@ -120,14 +138,42 @@ public class SlidingDoorAuto : MonoBehaviour
         }
 
         door.localPosition = target; // Snap 정렬
+        
+        if (onComplete != null)
+        {
+            onComplete();
+        }
+    }
+
+    private void OnDoorsFullyClosed()
+    {
+        if (!isFullyClosed)
+        {
+            isFullyClosed = true;
+            Debug.Log("🚪 문이 완전히 닫혔습니다.");
+            
+            // 퇴장 후 문 닫힘이 아닌 경우에만 다음 루프 시작
+            if (!isClosingAfterExit && LoopManager.Instance.currentState == GameState.Waiting)
+            {
+                Debug.Log("입장 후 문이 닫혔습니다. 루프를 시작합니다.");
+                LoopManager.Instance.OnDoorClosed();
+            }
+            else if (isClosingAfterExit)
+            {
+                Debug.Log("퇴장 후 문이 닫혔습니다. 다음 입장을 기다립니다.");
+                // 퇴장 후 문 닫힘 상태 리셋은 입장 시 처리
+            }
+        }
     }
 
     public void ResetDoor()
     {
         // 다음 루프 시작 시 호출
         hasEnteredThisLoop = false;
+        isClosingAfterExit = false;
         CloseDoors();
     }
+    
     private System.Collections.IEnumerator CloseAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
