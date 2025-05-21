@@ -2266,6 +2266,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e123c3094da74b2da19aa989ef26778, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameOverManager: {fileID: 1336575182}
 --- !u!4 &1269218730
 Transform:
   m_ObjectHideFlags: 0
@@ -2349,7 +2350,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1336575180}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 526efc236abb3f344a7609ee3b8973e7, type: 3}
+  m_Script: {fileID: 11500000, guid: 4217d4fa3ce238d48913af71bc7f69a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   gameOverCanvas: {fileID: 1811997473}
@@ -2357,7 +2358,7 @@ MonoBehaviour:
   gameOverText: {fileID: 1877551011}
   retryButton: {fileID: 1365599195}
   fadeDuration: 2
-  successMessage: "\uD0C8\uCD9C \uC131\uACF5!"
+  successMessage: Game Clear!
   failureMessage: Game Over
 --- !u!1 &1362554754 stripped
 GameObject:
