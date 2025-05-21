@@ -2610,6 +2610,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1336575181}
+  - component: {fileID: 1336575182}
   m_Layer: 0
   m_Name: GameOverManager
   m_TagString: Untagged
@@ -2633,6 +2634,25 @@ Transform:
   - {fileID: 1811997470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1336575182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1336575180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 526efc236abb3f344a7609ee3b8973e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameOverCanvas: {fileID: 1811997473}
+  fadePanel: {fileID: 1248989663}
+  gameOverText: {fileID: 1877551011}
+  retryButton: {fileID: 1365599195}
+  fadeDuration: 2
+  successMessage: "\uD0C8\uCD9C \uC131\uACF5!"
+  failureMessage: Game Over
 --- !u!1 &1362554754 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 72108140937149302, guid: 3d1a8f506ae64f240862534efc94c1f3, type: 3}
