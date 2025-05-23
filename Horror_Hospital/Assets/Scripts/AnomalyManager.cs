@@ -1,6 +1,7 @@
 // Scripts/System/AnomalyManager.cs
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class AnomalyManager : MonoBehaviour
 {
@@ -13,7 +14,19 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private GameObject[] monitors;
     [SerializeField] private Material normalMonitorMaterial;
     [SerializeField] private Material glitchMonitorMaterial;
-    
+    [Header("이상현상 B - 환자 복제")]
+    [SerializeField] private GameObject patientPrefab;
+    [SerializeField] private Transform[] spawnPoints;
+    [SerializeField] private float spawnInterval = 3f;
+    [SerializeField] private int maxPatientCount = 5;
+    [Header("이상현상 C - 붉은 물 상승")]
+    [SerializeField] private GameObject redLiquidObject;
+    [SerializeField] private float riseHeight = 1.0f;
+    [SerializeField] private float riseDuration = 5.0f;
+
+    private Vector3 redLiquidStartPos;
+
+
     [Header("제한 시간")]
     [SerializeField] private float anomalyTimeLimit = 60f; // 이상현상 발견 후 버튼 누르기까지 제한시간 (초)
     
@@ -21,6 +34,8 @@ public class AnomalyManager : MonoBehaviour
     private Coroutine anomalyCoroutine;
     private bool anomalyActive = false;
     private float anomalyTimer = 0f;
+    private List<GameObject> spawnedPatients = new List<GameObject>();
+
 
     private void Awake()
     {
@@ -30,6 +45,32 @@ public class AnomalyManager : MonoBehaviour
     
     private void Update()
     {
+#if UNITY_EDITOR
+    // 디버그 단축키 - A, B, C 이상현상 수동 실행
+    if (Input.GetKeyDown(KeyCode.Alpha1))
+    {
+        Debug.Log("🔵 테스트: 이상현상 A 실행");
+        ActivateAnomaly(AnomalyType.A);
+    }
+
+    if (Input.GetKeyDown(KeyCode.Alpha2))
+    {
+        Debug.Log("🟢 테스트: 이상현상 B 실행");
+        ActivateAnomaly(AnomalyType.B);
+    }
+
+    if (Input.GetKeyDown(KeyCode.Alpha3))
+    {
+        Debug.Log("🔴 테스트: 이상현상 C 실행");
+        ActivateAnomaly(AnomalyType.C);
+    }
+
+    if (Input.GetKeyDown(KeyCode.R))
+    {
+        Debug.Log("🔁 테스트: 이상현상 리셋");
+        StopAllAnomalies();
+    }
+#endif
         // 활성화된 이상현상이 있고 제한시간 카운트다운 중
         if (anomalyActive && activeAnomaly != AnomalyType.None && 
             LoopManager.Instance.currentState == GameState.WaitingForReport)
@@ -77,12 +118,14 @@ public class AnomalyManager : MonoBehaviour
             case AnomalyType.B:
                 Debug.Log("이상현상 B 활성화");
                 // TODO: B 타입 이상현상 연출
+                anomalyCoroutine = StartCoroutine(PlayAnomalyTypeB());
                 break;
-                
+
             case AnomalyType.C:
                 Debug.Log("이상현상 C 활성화");
-                // TODO: C 타입 이상현상 연출
+                anomalyCoroutine = StartCoroutine(PlayAnomalyTypeC());
                 break;
+
         }
     }
     
@@ -124,6 +167,25 @@ public class AnomalyManager : MonoBehaviour
         if (anomalySoundSource != null)
         {
             anomalySoundSource.Stop();
+        }
+
+        // 복제된 환자 제거
+        if (spawnedPatients != null)
+        {
+            foreach (GameObject patient in spawnedPatients)
+            {
+                if (patient != null)
+                {
+                    Destroy(patient);
+                }
+            }
+            spawnedPatients.Clear();
+        }
+        // 물 내려감
+        if (redLiquidObject != null)
+        {
+            redLiquidObject.transform.position = redLiquidStartPos; // 위치 리셋
+            redLiquidObject.GetComponent<MeshRenderer>().enabled = false; // 완전 안 보이게
         }
     }
     
@@ -185,7 +247,68 @@ public class AnomalyManager : MonoBehaviour
             yield return new WaitForSeconds(flickerTime);
         }
     }
-    
+
+    // 이상현상 타입 B: 환자복제
+    private IEnumerator PlayAnomalyTypeB()
+    {
+        anomalyActive = true;
+        anomalyTimer = anomalyTimeLimit;
+
+        int spawnCount = 0;
+        Debug.Log("🧍‍♂️ 이상현상 B 시작 - 환자가 일정 시간마다 복제됩니다.");
+
+        while (anomalyActive && spawnCount < maxPatientCount)
+        {
+            int randomIndex = Random.Range(0, spawnPoints.Length);
+
+            GameObject clone = Instantiate(
+                patientPrefab,
+                spawnPoints[randomIndex].position,
+                spawnPoints[randomIndex].rotation
+            );
+
+            spawnedPatients.Add(clone); // ✅ 리스트에 추가!
+
+            spawnCount++;
+            yield return new WaitForSeconds(spawnInterval);
+        }
+
+        Debug.Log("🧍‍♂️ 이상현상 B 완료 - 최대 환자 수에 도달했습니다.");
+    }
+
+    // 이상현상 타입 C: 물 차오름
+    private IEnumerator PlayAnomalyTypeC()
+    {
+        anomalyActive = true;
+        anomalyTimer = anomalyTimeLimit;
+
+        Debug.Log("🩸 이상현상 C 시작 - 5초 후 붉은 액체 차오름");
+
+        // 시작 위치 저장 + 렌더러 숨기기
+        redLiquidStartPos = redLiquidObject.transform.position;
+        redLiquidObject.transform.position = redLiquidStartPos;
+        redLiquidObject.GetComponent<MeshRenderer>().enabled = false; // 🔴 숨기기
+
+        // 5초 대기 (렌더러 OFF 상태 유지)
+        yield return new WaitForSeconds(5f);
+
+        // 이제 보여주고 상승 시작
+        Debug.Log("🩸 붉은 액체 상승 시작");
+        redLiquidObject.GetComponent<MeshRenderer>().enabled = true;
+
+        Vector3 endPos = redLiquidStartPos + Vector3.up * riseHeight;
+        float timer = 0f;
+
+        while (timer < riseDuration)
+        {
+            redLiquidObject.transform.position = Vector3.Lerp(redLiquidStartPos, endPos, timer / riseDuration);
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        redLiquidObject.transform.position = endPos;
+    }
+
     // 이상현상 트리거 영역에서 호출됨
     public void OnPlayerEnteredAnomalyZone()
     {
@@ -207,4 +330,6 @@ public class AnomalyManager : MonoBehaviour
         
         ResetAllAnomalies();
     }
+
+
 }
