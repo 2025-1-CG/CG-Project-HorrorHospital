@@ -11,6 +11,8 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private Light[] flickeringLights;
     [SerializeField] private AudioSource anomalySoundSource;
     [SerializeField] private AudioClip[] anomalySounds;
+    [SerializeField] private AudioSource anomalyASoundSource;
+    [SerializeField] private AudioClip anomalyASoundClip;
     [SerializeField] private GameObject[] monitors;
     [SerializeField] private Material normalMonitorMaterial;
     [SerializeField] private Material glitchMonitorMaterial;
@@ -23,7 +25,8 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private GameObject redLiquidObject;
     [SerializeField] private float riseHeight = 1.0f;
     [SerializeField] private float riseDuration = 5.0f;
-
+    [SerializeField] private AudioSource anomalyCSoundSource;
+    [SerializeField] private AudioClip anomalyCSoundClip;
     private Vector3 redLiquidStartPos;
 
 
@@ -190,6 +193,10 @@ public class AnomalyManager : MonoBehaviour
         {
             anomalySoundSource.Stop();
         }
+        if (anomalyASoundSource != null)
+        {
+            anomalyASoundSource.Stop();
+        }
 
         // 복제된 환자 제거
         if (spawnedPatients != null)
@@ -209,8 +216,15 @@ public class AnomalyManager : MonoBehaviour
             redLiquidObject.transform.position = redLiquidStartPos; // 위치 리셋
             redLiquidObject.GetComponent<MeshRenderer>().enabled = false; // 완전 안 보이게
         }
+
+        // 물 소리 중지
+        if (anomalyCSoundSource != null)
+        {
+            anomalyCSoundSource.Stop();
+        }
+
     }
-    
+
     // 이상현상 타입 A: 모니터 전환, 조명 깜빡임, 이상한 사운드
     private IEnumerator PlayAnomalyTypeA()
     {
@@ -249,6 +263,7 @@ public class AnomalyManager : MonoBehaviour
                 anomalySoundSource.Play();
             }
 
+
             // 카메라 흔들림
             if (mainCamera != null)
             {
@@ -258,10 +273,14 @@ public class AnomalyManager : MonoBehaviour
                 }
                 cameraShakeCoroutine = StartCoroutine(CameraShake(60f, 0.05f));
             }
-
-
         }
 
+        if (anomalyASoundSource != null && anomalyASoundClip != null)
+        {
+            anomalyASoundSource.clip = anomalyASoundClip;
+            anomalyASoundSource.loop = true;
+            anomalyASoundSource.Play();
+        }
         // 3. 조명 깜빡임
         while (anomalyActive)
         {
@@ -330,6 +349,16 @@ public class AnomalyManager : MonoBehaviour
         Debug.Log("🩸 붉은 액체 상승 시작");
         redLiquidObject.GetComponent<MeshRenderer>().enabled = true;
 
+        // 물 소리
+        if (anomalyCSoundSource != null && anomalyCSoundClip != null)
+        {
+            anomalyCSoundSource.clip = anomalyCSoundClip;
+            anomalyCSoundSource.loop = true;
+            anomalyCSoundSource.Play();
+            Debug.Log("🎧 anomalyCSoundSource 테스트 재생됨");
+
+        }
+
         Vector3 endPos = redLiquidStartPos + Vector3.up * riseHeight;
         float timer = 0f;
 
@@ -339,7 +368,6 @@ public class AnomalyManager : MonoBehaviour
             timer += Time.deltaTime;
             yield return null;
         }
-
         redLiquidObject.transform.position = endPos;
     }
 
