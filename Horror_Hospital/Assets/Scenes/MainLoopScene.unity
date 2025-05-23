@@ -1982,7 +1982,7 @@ MonoBehaviour:
   closeDelay: 2
   doorFacingForward: {fileID: 1825886609}
   closeSound: {fileID: 8300000, guid: dd3c9735f2fc0d0429a3f68512c78181, type: 3}
-  openSound: {fileID: 0}
+  openSound: {fileID: 8300000, guid: 2ab5ced6c2ff0764db1172394e7c4727, type: 3}
 --- !u!82 &900979382
 AudioSource:
   m_ObjectHideFlags: 0
