@@ -385,6 +385,7 @@ public class AnomalyManager : MonoBehaviour
             // 카메라 위치 적용
             mainCamera.transform.localPosition = originalCamPos + new Vector3(offsetX, offsetY, 0f);
 
+
             elapsed += Time.deltaTime;
             yield return null;
         }
