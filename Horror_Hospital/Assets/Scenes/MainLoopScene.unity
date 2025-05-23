@@ -602,6 +602,7 @@ MonoBehaviour:
   riseHeight: 1
   riseDuration: 50
   anomalyTimeLimit: 60
+  mainCamera: {fileID: 1829109287}
 --- !u!4 &367519032
 Transform:
   m_ObjectHideFlags: 0
