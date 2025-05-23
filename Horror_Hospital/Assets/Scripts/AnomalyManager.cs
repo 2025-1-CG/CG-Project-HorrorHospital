@@ -16,7 +16,12 @@ public class AnomalyManager : MonoBehaviour
     
     [Header("제한 시간")]
     [SerializeField] private float anomalyTimeLimit = 60f; // 이상현상 발견 후 버튼 누르기까지 제한시간 (초)
-    
+
+    [Header("카메라 흔들림")]
+    [SerializeField] private Camera mainCamera;
+
+    private Vector3 originalCamPos;
+    private Coroutine cameraShakeCoroutine;
     private AnomalyType activeAnomaly = AnomalyType.None;
     private Coroutine anomalyCoroutine;
     private bool anomalyActive = false;
@@ -26,6 +31,12 @@ public class AnomalyManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        // mainCamera가 비어있다면 자동으로 MainCamera할당
+        if (mainCamera == null)
+        {
+            mainCamera = Camera.main;
+        }
     }
     
     private void Update()
@@ -103,7 +114,18 @@ public class AnomalyManager : MonoBehaviour
                 }
             }
         }
-        
+
+        // 카메라 흔들림 중단
+        if (cameraShakeCoroutine != null)
+        {
+            StopCoroutine(cameraShakeCoroutine);
+            cameraShakeCoroutine = null;
+            if (mainCamera != null)
+            {
+                mainCamera.transform.localPosition = originalCamPos;
+            }
+        }
+
         // 모니터 원상복구
         if (monitors != null && normalMonitorMaterial != null)
         {
@@ -164,8 +186,20 @@ public class AnomalyManager : MonoBehaviour
                 anomalySoundSource.loop = true;
                 anomalySoundSource.Play();
             }
+
+            // 카메라 흔들림
+            if (mainCamera != null)
+            {
+                if (cameraShakeCoroutine != null)
+                {
+                    StopCoroutine(cameraShakeCoroutine);
+                }
+                cameraShakeCoroutine = StartCoroutine(CameraShake(60f, 0.05f));
+            }
+
+
         }
-        
+
         // 3. 조명 깜빡임
         while (anomalyActive)
         {
@@ -207,4 +241,34 @@ public class AnomalyManager : MonoBehaviour
         
         ResetAllAnomalies();
     }
+
+    private IEnumerator CameraShake(float duration, float magnitude)
+    {
+        float elapsed = 0.0f;
+        originalCamPos = mainCamera.transform.localPosition;
+
+        while (elapsed < duration)
+        {
+            // 현재까지 경과한 비율
+            float percentComplete = elapsed / duration;
+
+            // 흔들림 세기를 시간에 따라 감소시키기
+            float currentMagnitude = Mathf.Lerp(magnitude, 0f, percentComplete);
+
+            // 랜덤 위치 오프셋 계산
+            float offsetX = Random.Range(-1f, 1f) * currentMagnitude;
+            float offsetY = Random.Range(-1f, 1f) * currentMagnitude;
+
+            // 카메라 위치 적용
+            mainCamera.transform.localPosition = originalCamPos + new Vector3(offsetX, offsetY, 0f);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // 흔들림 종료 후 원위치 복구
+        mainCamera.transform.localPosition = originalCamPos;
+    }
+
+
 }
