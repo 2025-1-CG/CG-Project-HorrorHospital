@@ -5,7 +5,7 @@ using UnityEngine;
 public class RigidbodyFPSController : MonoBehaviour
 {
     public bool canControl = true;
-    public float moveSpeed = 5f;
+    public float moveSpeed = 1.68f;
     public float mouseSensitivity = 2f;
     public Transform cameraTransform;
     public float pushPower = 2.0f; // �� �� �����ϴ� ��
@@ -19,10 +19,13 @@ public class RigidbodyFPSController : MonoBehaviour
     private bool isMoving = false;
     private float rotationX = 0f;
 
+    private Animator animator;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        animator = GetComponentInChildren<Animator>();
 
         // AudioSource �ʱ�ȭ
         audioSource = GetComponent<AudioSource>();
@@ -35,7 +38,7 @@ public class RigidbodyFPSController : MonoBehaviour
 
     void Update()
     {
-        if (!canControl) return;  
+        if (!canControl) return;
         RotateView();
     }
 
@@ -63,41 +66,50 @@ public class RigidbodyFPSController : MonoBehaviour
         float moveZ = Input.GetAxis("Vertical");
 
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        rb.MovePosition(rb.position + move * moveSpeed * Time.fixedDeltaTime);
-  
+        float moveAmount = move.magnitude;
+        if (move.magnitude > 0.01f)
+        {
+            animator.SetFloat("Speed", move.magnitude);
+        }
+        else
+        {
+            animator.SetFloat("Speed", 0f);
+        }
 
-    // �ȴ� �Ҹ� ó��
-    isMoving = move.magnitude > 0.1f;
+        rb.MovePosition(rb.position + move * moveSpeed * Time.fixedDeltaTime);
+
+        // �ȴ� �Ҹ� ó��
+        isMoving = move.magnitude > 0.1f;
         if (isMoving)
         {
             footstepTimer -= Time.fixedDeltaTime;
             if (footstepTimer <= 0f)
             {
                 PlayFootstep();
-    footstepTimer = footstepInterval;
+                footstepTimer = footstepInterval;
             }
         }
         else
-{
-    footstepTimer = 0f; // ���߸� Ÿ�̸� �ʱ�ȭ
+        {
+            footstepTimer = 0f; // ���߸� Ÿ�̸� �ʱ�ȭ
             if (audioSource.isPlaying)
             {
                 audioSource.Stop(); // �̵� ���߸� �Ҹ� ����
             }
         }
-}
+    }
 
     void PlayFootstep()
-{
-    if (footstepClips.Length == 0) return;
+    {
+        if (footstepClips.Length == 0) return;
 
-    int index = Random.Range(0, footstepClips.Length);
-    audioSource.clip = footstepClips[index];
-    audioSource.Play();
-}
+        int index = Random.Range(0, footstepClips.Length);
+        audioSource.clip = footstepClips[index];
+        audioSource.Play();
+    }
 
-// �浹 �� ���� �о��ִ� �Լ�
-private void OnCollisionEnter(Collision collision)
+    // �浹 �� ���� �о��ִ� �Լ�
+    private void OnCollisionEnter(Collision collision)
     {
         Rigidbody body = collision.rigidbody;
 
