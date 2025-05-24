@@ -75,6 +75,7 @@ public class RigidbodyFPSController : MonoBehaviour
         {
             animator.SetFloat("Speed", 0f);
         }
+        Debug.Log("Speed: " + moveAmount);
 
         rb.MovePosition(rb.position + move * moveSpeed * Time.fixedDeltaTime);
 
