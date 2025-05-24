@@ -12,6 +12,8 @@ public class StartManager : MonoBehaviour
 
     [Header("🔊 오디오")]
     public AudioSource bgm;
+    public AudioSource typingAudioSource;          // 👈 추가
+    public AudioClip typingSound;
 
     [Header("🎮 플레이어")]
     public RigidbodyFPSController playerController;
@@ -51,7 +53,10 @@ public class StartManager : MonoBehaviour
         {
             yield return FadeIn(canvasGroup, titleFadeInDuration);
             guideText.gameObject.SetActive(true);
-            yield return TypeText("Enter The Operation Room.\nand when the door closes, You have to judge the situation.\nIf all seems normal, press the Green button and leave.\nIf you sense anything strange, press the Red button and quickly exit.");
+            yield return TypeText("Enter the operation room.\n\n" +
+"Once the door shuts behind you, stay alert.\n\n" +
+"If everything feels normal, press the green button and leave.\n\n" +
+"But if something feels... off — hit the red button and get out. Fast.");
             yield return new WaitForSeconds(guideHoldDuration);
             yield return FadeOut(canvasGroup, titleFadeOutDuration);
             guideText.gameObject.SetActive(false);
@@ -59,7 +64,8 @@ public class StartManager : MonoBehaviour
 
         // 3. UI 종료 + 조작/크로스헤어 활성화
         canvasGroup.gameObject.SetActive(false);
-        if (bgm != null) bgm.Stop();
+        if (bgm != null)
+            yield return StartCoroutine(FadeOutAudio(bgm, 1f));
         if (playerController != null) playerController.canControl = true;
         if (crossHairCanvas != null) crossHairCanvas.SetActive(true);
 
@@ -70,10 +76,25 @@ public class StartManager : MonoBehaviour
     private IEnumerator TypeText(string fullText)
     {
         guideText.text = "";
+
+        // 🎧 타이핑 사운드 루프 재생 시작
+        if (typingAudioSource != null && typingSound != null)
+        {
+            typingAudioSource.clip = typingSound;
+            typingAudioSource.loop = true;
+            typingAudioSource.Play();
+        }
+
         foreach (char c in fullText)
         {
             guideText.text += c;
             yield return new WaitForSeconds(typeSpeed);
+        }
+
+        // 🎧 타이핑 사운드 정지
+        if (typingAudioSource != null && typingAudioSource.isPlaying)
+        {
+            typingAudioSource.Stop();
         }
     }
 
@@ -99,5 +120,21 @@ public class StartManager : MonoBehaviour
             yield return null;
         }
         cg.alpha = 0;
+    }
+
+    private IEnumerator FadeOutAudio(AudioSource audioSource, float duration)
+    {
+        float startVolume = audioSource.volume;
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            audioSource.volume = Mathf.Lerp(startVolume, 0f, t / duration);
+            yield return null;
+        }
+
+        audioSource.Stop();
+        audioSource.volume = startVolume; // 다음 재생을 위해 원복
     }
 }
