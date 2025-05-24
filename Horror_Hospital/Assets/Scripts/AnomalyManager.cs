@@ -2,10 +2,12 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class AnomalyManager : MonoBehaviour
 {
     public static AnomalyManager Instance;
+    private Coroutine dialogueCoroutine;
 
     [Header("이상현상 효과")]
     [SerializeField] private Light[] flickeringLights;
@@ -16,11 +18,20 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private GameObject[] monitors;
     [SerializeField] private Material normalMonitorMaterial;
     [SerializeField] private Material glitchMonitorMaterial;
+
+    [Header("이상현상 UI")]
+    [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private CanvasGroup dialogueCanvasGroup;
+    [SerializeField] private float dialogueFadeDuration = 1f;
+    [SerializeField] private float dialogueShowDuration = 3f;
+    [SerializeField] private TypewriterEffect typewriterEffect;
+
     [Header("이상현상 B - 환자 복제")]
     [SerializeField] private GameObject patientPrefab;
     [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private float spawnInterval = 3f;
     [SerializeField] private int maxPatientCount = 5;
+
     [Header("이상현상 C - 붉은 물 상승")]
     [SerializeField] private GameObject redLiquidObject;
     [SerializeField] private float riseHeight = 1.0f;
@@ -56,7 +67,7 @@ public class AnomalyManager : MonoBehaviour
             mainCamera = Camera.main;
         }
     }
-    
+
     private void Update()
     {
 #if UNITY_EDITOR
@@ -86,11 +97,11 @@ public class AnomalyManager : MonoBehaviour
     }
 #endif
         // 활성화된 이상현상이 있고 제한시간 카운트다운 중
-        if (anomalyActive && activeAnomaly != AnomalyType.None && 
+        if (anomalyActive && activeAnomaly != AnomalyType.None &&
             LoopManager.Instance.currentState == GameState.WaitingForReport)
         {
             anomalyTimer -= Time.deltaTime;
-            
+
             if (anomalyTimer <= 0f)
             {
                 // 제한시간이 끝났는데 버튼을 누르지 않은 경우
@@ -105,14 +116,14 @@ public class AnomalyManager : MonoBehaviour
     {
         Debug.Log($"🔍 ActivateAnomaly: {type}");
         activeAnomaly = type;
-        
+
         // 이전 이상현상 정리
         if (anomalyCoroutine != null)
         {
             StopCoroutine(anomalyCoroutine);
             anomalyCoroutine = null;
         }
-        
+
         ResetAllAnomalies();
 
         // 이상현상 타입에 따른 연출 처리
@@ -121,14 +132,16 @@ public class AnomalyManager : MonoBehaviour
             case AnomalyType.None:
                 // 튜토리얼/정상 상태 - 아무 이상 없음
                 Debug.Log("정상 상태 - 이상현상 없음");
+                ShowDialogue("Look around carefully. The air feels… heavy.");
                 break;
-                
+
             case AnomalyType.A:
                 Debug.Log("이상현상 A 활성화");
                 // A 타입: 모니터 전환, 조명 깜빡임, 이상한 사운드
+                ShowDialogue("Something’s wrong… Get closer to the patient.");
                 anomalyCoroutine = StartCoroutine(PlayAnomalyTypeA());
                 break;
-                
+
             case AnomalyType.B:
                 Debug.Log("이상현상 B 활성화");
                 // TODO: B 타입 이상현상 연출
@@ -142,13 +155,13 @@ public class AnomalyManager : MonoBehaviour
 
         }
     }
-    
+
     // 모든 이상현상 효과 리셋
     private void ResetAllAnomalies()
     {
         anomalyActive = false;
         anomalyTimer = anomalyTimeLimit;
-        
+
         // 조명 원상복구
         if (flickeringLights != null)
         {
@@ -187,7 +200,7 @@ public class AnomalyManager : MonoBehaviour
                 }
             }
         }
-        
+
         // 사운드 중지
         if (anomalySoundSource != null)
         {
@@ -229,13 +242,13 @@ public class AnomalyManager : MonoBehaviour
     private IEnumerator PlayAnomalyTypeA()
     {
         anomalyActive = false; // 트리거에 들어가기 전에는 비활성화 상태
-        
+
         // 플레이어가 트리거 영역에 들어가야 활성화
         yield return new WaitUntil(() => anomalyActive);
-        
+
         Debug.Log("🖥️ 이상현상 A가 트리거되었습니다!");
         anomalyTimer = anomalyTimeLimit; // 타이머 리셋
-        
+
         // 1. 모니터 화면 전환
         if (monitors != null && glitchMonitorMaterial != null)
         {
@@ -251,7 +264,7 @@ public class AnomalyManager : MonoBehaviour
                 }
             }
         }
-        
+
         // 2. 사운드 재생
         if (anomalySoundSource != null && anomalySounds != null && anomalySounds.Length > 0)
         {
@@ -294,7 +307,7 @@ public class AnomalyManager : MonoBehaviour
                     }
                 }
             }
-            
+
             // 깜빡임 주기 - 랜덤
             float flickerTime = Random.Range(0.05f, 0.2f);
             yield return new WaitForSeconds(flickerTime);
@@ -380,7 +393,7 @@ public class AnomalyManager : MonoBehaviour
             Debug.Log("⚠️ 플레이어가 이상현상 구역에 들어왔습니다. 타이머 시작!");
         }
     }
-    
+
     // 게임 오버나 루프 종료 시 호출
     public void StopAllAnomalies()
     {
@@ -389,7 +402,7 @@ public class AnomalyManager : MonoBehaviour
             StopCoroutine(anomalyCoroutine);
             anomalyCoroutine = null;
         }
-        
+
         ResetAllAnomalies();
     }
 
@@ -420,5 +433,14 @@ public class AnomalyManager : MonoBehaviour
 
         // 흔들림 종료 후 원위치 복구
         mainCamera.transform.localPosition = originalCamPos;
+    }
+
+     // UI 표시
+    private void ShowDialogue(string message)
+    {
+        if (dialogueCoroutine != null)
+            StopCoroutine(dialogueCoroutine);
+        dialogueText.text = "";
+        dialogueCoroutine = StartCoroutine(typewriterEffect.PlayTyping(dialogueText, message, dialogueCanvasGroup));
     }
 }
