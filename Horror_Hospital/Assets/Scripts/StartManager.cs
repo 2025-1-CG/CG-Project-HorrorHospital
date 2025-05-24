@@ -43,20 +43,26 @@ public class StartManager : MonoBehaviour
         yield return FadeOut(canvasGroup, titleFadeOutDuration);
         titleText.gameObject.SetActive(false);
 
+        // 타이핑 준비
+        guideText.text = "";
         guideText.gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+
         yield return FadeIn(canvasGroup, titleFadeInDuration);
+
+        // 타이핑 효과 실행 (Fade 없음)
         yield return typewriterEffect.PlayTyping(guideText,
-            "Enter the operation room.\n\n" +
-            "Once the door shuts behind you, stay alert.\n\n" +
-            "If everything feels normal, press the green button and leave.\n\n" +
-            "But if something feels... off — hit the red button and get out. Fast.", 
-            canvasGroup
-            );
+    "Enter the operation room.\n\n" +
+    "Once the door shuts behind you, stay alert.\n\n" +
+    "If everything feels normal, press the green button and leave.\n\n" +
+    "But if something feels... off — hit the red button and get out. Fast.");
+
         yield return new WaitForSeconds(guideHoldDuration);
         yield return FadeOut(canvasGroup, titleFadeOutDuration);
-        guideText.gameObject.SetActive(false);
 
+        guideText.gameObject.SetActive(false);
         canvasGroup.gameObject.SetActive(false);
+
         yield return FadeOutAudio(bgm, 1f);
 
         playerController.canControl = true;
