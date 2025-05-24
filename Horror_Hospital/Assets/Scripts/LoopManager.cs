@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum AnomalyType { None, A, B, C }
 public enum GameState { Waiting, InProgress, WaitingForReport, WaitingForExit }
@@ -9,14 +10,16 @@ public class LoopManager : MonoBehaviour
     public static LoopManager Instance;
 
     public int loopCount = 0;
-    public int maxLoop = 3;
+    public int maxLoop = 4;
     public AnomalyType currentAnomaly = AnomalyType.None;
     public bool anomalyReported = false;
     public GameState currentState = GameState.Waiting;
 
+    private List<AnomalyType> loopAnomalies = new List<AnomalyType>();
+
     [Header("트리거 영역")]
     [SerializeField] private AnomalyTriggerZone[] anomalyTriggerZones;
-    
+
     [Header("디버그")]
     [SerializeField] private bool debugMode = false;
 
@@ -24,6 +27,8 @@ public class LoopManager : MonoBehaviour
     {
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
+
+        InitAnomalySequence();
     }
 
     // 문이 완전히 닫혔을 때 호출됨 (DoorController에서 호출)
@@ -44,68 +49,74 @@ public class LoopManager : MonoBehaviour
         }
     }
 
-    public void StartLoop()
+    private void InitAnomalySequence()
     {
-        loopCount = 0; // 0번째는 튜토리얼 루프
-        currentState = GameState.InProgress;
-        
-        Debug.Log("🎮 게임 시작: 튜토리얼 루프");
-        StartCoroutine(StartTutorialLoop());
+        loopAnomalies.Clear();
+
+        // 2개는 튜토리얼(None)
+        loopAnomalies.Add(AnomalyType.None);
+        loopAnomalies.Add(AnomalyType.None);
+
+        // 3개는 랜덤 A/B/C
+        List<AnomalyType> anomalies = new List<AnomalyType> {
+        AnomalyType.A,
+        AnomalyType.B,
+        AnomalyType.C
+    };
+
+        for (int i = 0; i < 10; i++) // 셔플
+        {
+            int i1 = Random.Range(0, anomalies.Count);
+            int i2 = Random.Range(0, anomalies.Count);
+            (anomalies[i1], anomalies[i2]) = (anomalies[i2], anomalies[i1]);
+        }
+
+        loopAnomalies.AddRange(anomalies);
+
+        // 전체 셔플 (튜토리얼과 이상현상 뒤섞기)
+        for (int i = 0; i < 10; i++)
+        {
+            int i1 = Random.Range(0, loopAnomalies.Count);
+            int i2 = Random.Range(0, loopAnomalies.Count);
+            (loopAnomalies[i1], loopAnomalies[i2]) = (loopAnomalies[i2], loopAnomalies[i1]);
+        }
+
+        Debug.Log("✅ 루프 순서: " + string.Join(", ", loopAnomalies));
     }
 
-    private IEnumerator StartTutorialLoop()
+    public void StartLoop()
     {
-        // 모든 이상현상 트리거 영역 리셋
-        ResetAllTriggerZones();
-        
-        // 잠시 대기 후 튜토리얼 루프 시작 (플레이어가 상황을 인지할 수 있도록)
-        yield return new WaitForSeconds(1.5f);
-        
-        currentAnomaly = AnomalyType.None;
-        AnomalyManager.Instance.ActivateAnomaly(currentAnomaly);
-        
-        currentState = GameState.WaitingForReport;
-        Debug.Log("🔍 튜토리얼: 이상현상이 없습니다. 이상 없음 버튼을 누르세요.");
+        loopCount = 0;
+        currentState = GameState.InProgress;
+        Debug.Log("🎮 게임 시작");
+        StartNextLoop();
     }
 
     public void StartNextLoop()
     {
         currentState = GameState.InProgress;
         anomalyReported = false;
-        
+
         // 모든 이상현상 트리거 영역 리셋
         ResetAllTriggerZones();
-        
+
         SelectAnomaly();
     }
 
     private void SelectAnomaly()
     {
-        if (loopCount == 0)
+        if (loopCount >= loopAnomalies.Count)
         {
-            currentAnomaly = AnomalyType.None; // 튜토리얼은 항상 이상없음
+            Debug.LogWarning("⚠ 루프 범위 초과");
+            currentAnomaly = AnomalyType.None;
         }
         else
         {
-            // 순차적으로 이상현상 타입 설정 (None → A → B → C)
-            switch (loopCount)
-            {
-                case 1:
-                    currentAnomaly = AnomalyType.A;
-                    break;
-                case 2:
-                    currentAnomaly = AnomalyType.B;
-                    break;
-                case 3:
-                default:
-                    currentAnomaly = AnomalyType.C;
-                    break;
-            }
+            currentAnomaly = loopAnomalies[loopCount];
         }
 
         Debug.Log($"[Loop {loopCount}] 이상현상: {currentAnomaly}");
         AnomalyManager.Instance.ActivateAnomaly(currentAnomaly);
-        
         currentState = GameState.WaitingForReport;
     }
 
@@ -119,7 +130,7 @@ public class LoopManager : MonoBehaviour
 
         anomalyReported = true;
         currentState = GameState.WaitingForExit;
-        
+
         // 이상현상 효과 정지
         AnomalyManager.Instance.StopAllAnomalies();
 
@@ -133,12 +144,12 @@ public class LoopManager : MonoBehaviour
         }
         else
         {
-            string message = loopCount == 0 
-                ? "✅ 튜토리얼 성공! 복도로 퇴장하세요." 
+            string message = loopCount == 0
+                ? "✅ 튜토리얼 성공! 복도로 퇴장하세요."
                 : "✅ 정확하게 보고됨. 복도로 퇴장하세요.";
-            
+
             Debug.Log(message);
-            
+
             // TODO: UI로 플레이어에게 알림
         }
     }
@@ -155,7 +166,7 @@ public class LoopManager : MonoBehaviour
 
         loopCount++;
         Debug.Log($"🚶 복도로 퇴장 완료. 다음 루프({loopCount})를 위해 다시 입장하세요.");
-        
+
         currentState = GameState.Waiting;
 
         if (loopCount > maxLoop)
@@ -163,7 +174,7 @@ public class LoopManager : MonoBehaviour
             GameManager.Instance.GameClear();
         }
     }
-    
+
     // 모든 이상현상 트리거 영역 리셋
     private void ResetAllTriggerZones()
     {
@@ -183,7 +194,7 @@ public class LoopManager : MonoBehaviour
     public void DebugSkipToNextLoop()
     {
         if (!debugMode) return;
-        
+
         Debug.Log("🛠 디버그: 다음 루프로 강제 이동");
         if (currentState == GameState.WaitingForExit)
         {
