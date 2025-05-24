@@ -4,10 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(AudioSource))]
 public class RigidbodyFPSController : MonoBehaviour
 {
+    public bool canControl = true;
     public float moveSpeed = 5f;
     public float mouseSensitivity = 2f;
     public Transform cameraTransform;
-    public float pushPower = 2.0f; // ¹Ð ¶§ Àü´ÞÇÏ´Â Èû
+    public float pushPower = 2.0f; // ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½
 
     public AudioClip[] footstepClips;
     public float footstepInterval = 0.5f;
@@ -23,10 +24,10 @@ public class RigidbodyFPSController : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
 
-        // AudioSource ÃÊ±âÈ­
+        // AudioSource ï¿½Ê±ï¿½È­
         audioSource = GetComponent<AudioSource>();
         audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 1.0f; // 3D »ç¿îµå
+        audioSource.spatialBlend = 1.0f; // 3D ï¿½ï¿½ï¿½ï¿½
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -34,11 +35,13 @@ public class RigidbodyFPSController : MonoBehaviour
 
     void Update()
     {
+        if (!canControl) return;  
         RotateView();
     }
 
     void FixedUpdate()
     {
+        if (!canControl) return;
         MovePlayer();
     }
 
@@ -63,7 +66,7 @@ public class RigidbodyFPSController : MonoBehaviour
         rb.MovePosition(rb.position + move * moveSpeed * Time.fixedDeltaTime);
   
 
-    // °È´Â ¼Ò¸® Ã³¸®
+    // ï¿½È´ï¿½ ï¿½Ò¸ï¿½ Ã³ï¿½ï¿½
     isMoving = move.magnitude > 0.1f;
         if (isMoving)
         {
@@ -76,10 +79,10 @@ public class RigidbodyFPSController : MonoBehaviour
         }
         else
 {
-    footstepTimer = 0f; // ¸ØÃß¸é Å¸ÀÌ¸Ó ÃÊ±âÈ­
+    footstepTimer = 0f; // ï¿½ï¿½ï¿½ß¸ï¿½ Å¸ï¿½Ì¸ï¿½ ï¿½Ê±ï¿½È­
             if (audioSource.isPlaying)
             {
-                audioSource.Stop(); // ÀÌµ¿ ¸ØÃß¸é ¼Ò¸® ²ô±â
+                audioSource.Stop(); // ï¿½Ìµï¿½ ï¿½ï¿½ï¿½ß¸ï¿½ ï¿½Ò¸ï¿½ ï¿½ï¿½ï¿½ï¿½
             }
         }
 }
@@ -93,14 +96,14 @@ public class RigidbodyFPSController : MonoBehaviour
     audioSource.Play();
 }
 
-// Ãæµ¹ ½Ã ¹®À» ¹Ð¾îÁÖ´Â ÇÔ¼ö
+// ï¿½æµ¹ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð¾ï¿½ï¿½Ö´ï¿½ ï¿½Ô¼ï¿½
 private void OnCollisionEnter(Collision collision)
     {
         Rigidbody body = collision.rigidbody;
 
         if (body != null && !body.isKinematic)
         {
-            Vector3 pushDir = collision.contacts[0].normal * -1; // ¹Ð¸®´Â ¹æÇâ
+            Vector3 pushDir = collision.contacts[0].normal * -1; // ï¿½Ð¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             body.AddForce(pushDir * pushPower, ForceMode.Impulse);
         }
     }

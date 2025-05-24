@@ -10,10 +10,13 @@ public class GameManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
-        if (gameOverManager == null)  // 참조가 없다면 씬에서 찾기
-        {
+        if (gameOverManager == null)
             gameOverManager = FindObjectOfType<GameOverManager>();
-        }
+    }
+
+    public void StartGameFlow()
+    {
+        Debug.Log("게임 시작 플로우 진입");
     }
 
     public void GameOver(string reason)

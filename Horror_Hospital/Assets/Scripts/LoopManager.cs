@@ -34,7 +34,7 @@ public class LoopManager : MonoBehaviour
             if (loopCount == 0)
             {
                 Debug.Log("문이 닫혔습니다. 튜토리얼 루프를 시작합니다.");
-                StartGame();
+                StartLoop();
             }
             else
             {
@@ -44,7 +44,7 @@ public class LoopManager : MonoBehaviour
         }
     }
 
-    public void StartGame()
+    public void StartLoop()
     {
         loopCount = 0; // 0번째는 튜토리얼 루프
         currentState = GameState.InProgress;
