@@ -435,12 +435,45 @@ public class AnomalyManager : MonoBehaviour
         mainCamera.transform.localPosition = originalCamPos;
     }
 
-     // UI 표시
+    // UI 표시
     private void ShowDialogue(string message)
     {
         if (dialogueCoroutine != null)
             StopCoroutine(dialogueCoroutine);
         dialogueText.text = "";
-        dialogueCoroutine = StartCoroutine(typewriterEffect.PlayTyping(dialogueText, message, dialogueCanvasGroup));
+        dialogueCoroutine = StartCoroutine(ShowDialogueRoutine(message));
+    }
+
+    private IEnumerator ShowDialogueRoutine(string message)
+    {
+        dialogueCanvasGroup.gameObject.SetActive(true);
+        dialogueCanvasGroup.alpha = 0f;
+
+        // Fade In
+        float t = 0f;
+        while (t < dialogueFadeDuration)
+        {
+            t += Time.deltaTime;
+            dialogueCanvasGroup.alpha = Mathf.Lerp(0f, 1f, t / dialogueFadeDuration);
+            yield return null;
+        }
+        dialogueCanvasGroup.alpha = 1f;
+
+        // Typewriter 효과 실행
+        yield return typewriterEffect.PlayTyping(dialogueText, message);
+
+        // 대사 유지
+        yield return new WaitForSeconds(dialogueShowDuration);
+
+        // Fade Out
+        t = 0f;
+        while (t < dialogueFadeDuration)
+        {
+            t += Time.deltaTime;
+            dialogueCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t / dialogueFadeDuration);
+            yield return null;
+        }
+        dialogueCanvasGroup.alpha = 0f;
+        dialogueCanvasGroup.gameObject.SetActive(false);
     }
 }
