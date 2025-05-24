@@ -1157,7 +1157,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loopCount: 0
-  maxLoop: 3
+  maxLoop: 4
   currentAnomaly: 0
   anomalyReported: 0
   currentState: 0
