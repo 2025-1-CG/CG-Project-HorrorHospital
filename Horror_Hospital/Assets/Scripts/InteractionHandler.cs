@@ -1,12 +1,14 @@
-// Scripts/Interaction/InteractionHandler.cs
 using UnityEngine;
 
 public class InteractionHandler : MonoBehaviour
 {
     public float interactDistance = 3f;
     public KeyCode interactKey = KeyCode.E;
-    public LayerMask interactLayer; // Interactable 레이어만 감지
-    public GameObject interactUI; // "Press E to interact" UI
+    public LayerMask interactLayer;
+
+    [Header("Interaction UIs")]
+    public GameObject anomalyUI;      // 이상 있음 버튼 UI
+    public GameObject noAnomalyUI;    // 이상 없음 버튼 UI
 
     private Camera playerCamera;
     private IInteractable currentTarget;
@@ -14,7 +16,7 @@ public class InteractionHandler : MonoBehaviour
     void Start()
     {
         playerCamera = Camera.main;
-        interactUI?.SetActive(false);
+        HideAllUIs();
     }
 
     void Update()
@@ -27,7 +29,7 @@ public class InteractionHandler : MonoBehaviour
             currentTarget = hit.collider.GetComponent<IInteractable>();
             if (currentTarget != null)
             {
-                interactUI?.SetActive(true);
+                ShowUIBasedOnTarget(currentTarget);
 
                 if (Input.GetKeyDown(interactKey))
                 {
@@ -38,7 +40,26 @@ public class InteractionHandler : MonoBehaviour
             }
         }
 
-        interactUI?.SetActive(false);
+        HideAllUIs();
         currentTarget = null;
+    }
+
+    void ShowUIBasedOnTarget(IInteractable target)
+    {
+        HideAllUIs();
+
+        if (target is AnomalyButton button)
+        {
+            if (button.IsAnomaly)
+                anomalyUI?.SetActive(true);
+            else
+                noAnomalyUI?.SetActive(true);
+        }
+    }
+
+    void HideAllUIs()
+    {
+        anomalyUI?.SetActive(false);
+        noAnomalyUI?.SetActive(false);
     }
 }

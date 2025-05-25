@@ -1,36 +1,33 @@
 // Scripts/Interaction/AnomalyButton.cs
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class AnomalyButton : MonoBehaviour, IInteractable
 {
-    public bool isGlitchButton = false; // true: 이상 있음, false: 이상 없음
-    
-    [SerializeField]
-    private string buttonDescription;  // 버튼 설명 (예: "이상 없음", "이상 있음")
+    [SerializeField] private bool isAnomaly = false;
+    [SerializeField] private AudioClip clickSound;
 
-    [SerializeField]
-    private AudioClip buttonSound;     // 버튼 클릭 사운드
+    public bool IsAnomaly => isAnomaly;
 
     private AudioSource audioSource;
 
     private void Awake()
     {
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
+        audioSource = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f;
     }
 
     public void Interact()
     {
-        // 버튼 사운드 재생
-        if (buttonSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(buttonSound);
-        }
+        // 사운드 재생
+        if (clickSound != null)
+            audioSource.PlayOneShot(clickSound);
 
-        Debug.Log($"버튼 클릭됨: {(isGlitchButton ? "이상 있음" : "이상 없음")}");
-        LoopManager.Instance.ReportAnomaly(isGlitchButton);
+        // 로그
+        Debug.Log($"[Button Clicked] {(isAnomaly ? "🟥 Anomaly Detected" : "🟩 No Anomaly")}");
+
+        // 이상현상 보고
+        LoopManager.Instance.ReportAnomaly(isAnomaly);
     }
 }
