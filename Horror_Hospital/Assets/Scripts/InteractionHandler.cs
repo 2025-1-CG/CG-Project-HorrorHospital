@@ -9,9 +9,11 @@ public class InteractionHandler : MonoBehaviour
     [Header("Interaction UIs")]
     public GameObject anomalyUI;      // 이상 있음 버튼 UI
     public GameObject noAnomalyUI;    // 이상 없음 버튼 UI
+    public GameObject waitUI;
 
     private Camera playerCamera;
     private IInteractable currentTarget;
+
 
     void Start()
     {
@@ -31,7 +33,7 @@ public class InteractionHandler : MonoBehaviour
             {
                 ShowUIBasedOnTarget(currentTarget);
 
-                if (Input.GetKeyDown(interactKey))
+                if (!LoopManager.Instance.IsButtonLocked && Input.GetKeyDown(interactKey))
                 {
                     currentTarget.Interact();
                 }
@@ -43,10 +45,15 @@ public class InteractionHandler : MonoBehaviour
         HideAllUIs();
         currentTarget = null;
     }
-
     void ShowUIBasedOnTarget(IInteractable target)
     {
         HideAllUIs();
+
+        if (LoopManager.Instance.IsButtonLocked)
+        {
+            waitUI?.SetActive(true);
+            return;
+        }
 
         if (target is AnomalyButton button)
         {
@@ -61,5 +68,6 @@ public class InteractionHandler : MonoBehaviour
     {
         anomalyUI?.SetActive(false);
         noAnomalyUI?.SetActive(false);
+        waitUI?.SetActive(false);
     }
 }

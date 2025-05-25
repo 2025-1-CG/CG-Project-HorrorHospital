@@ -18,6 +18,10 @@ public class LoopManager : MonoBehaviour
     public Transform player;
     public Transform playerResetPoint;
     public FadeManager fadeManager;
+    public int noneAnomalyCount = 0;
+    public float buttonLockDuration = 10f;
+    private float buttonLockTimer = 0f;
+    public bool IsButtonLocked { get; private set; } = false;
 
 
     private List<AnomalyType> loopAnomalies = new List<AnomalyType>();
@@ -36,6 +40,18 @@ public class LoopManager : MonoBehaviour
         InitAnomalySequence();
     }
 
+    private void Update()
+{
+    if (IsButtonLocked)
+    {
+        buttonLockTimer -= Time.deltaTime;
+        if (buttonLockTimer <= 0f)
+        {
+            IsButtonLocked = false;
+            Debug.Log("🔓 버튼 잠금 해제됨");
+        }
+    }
+}
     // 문이 완전히 닫혔을 때 호출됨 (DoorController에서 호출)
     public void OnDoorClosed()
     {
@@ -102,6 +118,9 @@ public class LoopManager : MonoBehaviour
         currentState = GameState.InProgress;
         anomalyReported = false;
 
+        buttonLockTimer = buttonLockDuration;
+    IsButtonLocked = true;
+
         // 모든 이상현상 트리거 영역 리셋
         ResetAllTriggerZones();
 
@@ -118,6 +137,11 @@ public class LoopManager : MonoBehaviour
         else
         {
             currentAnomaly = loopAnomalies[loopCount];
+
+            if (currentAnomaly == AnomalyType.None)
+            {
+                noneAnomalyCount++;
+            }
         }
 
         Debug.Log($"[Loop {loopCount}] 이상현상: {currentAnomaly}");
@@ -208,7 +232,7 @@ public class LoopManager : MonoBehaviour
             controller.canControl = true;
 
         fadeManager.gameObject.SetActive(false);
-        
+
         loopCount++;
         Debug.Log($"현재 루프: {loopCount}/{maxLoop}");
 

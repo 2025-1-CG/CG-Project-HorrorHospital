@@ -130,9 +130,17 @@ public class AnomalyManager : MonoBehaviour
         switch (type)
         {
             case AnomalyType.None:
-                // 튜토리얼/정상 상태 - 아무 이상 없음
+            // 튜토리얼/정상 상태 - 아무 이상 없음
                 Debug.Log("정상 상태 - 이상현상 없음");
-                ShowDialogue("Look around carefully. The air feels… heavy.");
+
+                if (LoopManager.Instance.noneAnomalyCount == 1)
+                {
+                    ShowDialogue("It feels quiet. But you can't be too sure.");  
+                }
+                else
+                {
+                    ShowDialogue("Still... nothing stands out. Or are you missing something?");  
+                }
                 break;
 
             case AnomalyType.A:
