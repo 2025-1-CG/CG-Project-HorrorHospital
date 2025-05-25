@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-6698920712786703940
+--- !u!114 &-3303332266162483448
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -9,31 +9,69 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbb2952b95454955ba507c3d96778a76, type: 3}
-  m_Name: VhsVol
+  m_Script: {fileID: 11500000, guid: 0b2db86121404754db890f4c8dfe81b2, type: 3}
+  m_Name: Bloom
   m_EditorClassIdentifier: 
   active: 1
-  _weight:
-    m_OverrideState: 1
+  skipIterations:
+    m_OverrideState: 0
     m_Value: 1
-  _bleed:
+  threshold:
     m_OverrideState: 1
-    m_Value: 0.22
-  _rocking:
+    m_Value: 0.9
+  intensity:
     m_OverrideState: 1
-    m_Value: 0.0151
-  _tape:
-    m_OverrideState: 1
-    m_Value: 0.22
-  _noise:
+    m_Value: 0.7
+  scatter:
     m_OverrideState: 0
-    m_Value: 0.052
-  _flickering:
-    m_OverrideState: 1
-    m_Value: 0.17
-  _glitch:
+    m_Value: 0.7
+  clamp:
     m_OverrideState: 0
-    m_Value: {r: 1, g: 0, b: 0, a: 1}
+    m_Value: 65472
+  tint:
+    m_OverrideState: 0
+    m_Value: {r: 1, g: 1, b: 1, a: 1}
+  highQualityFiltering:
+    m_OverrideState: 0
+    m_Value: 0
+  downscale:
+    m_OverrideState: 0
+    m_Value: 0
+  maxIterations:
+    m_OverrideState: 0
+    m_Value: 6
+  dirtTexture:
+    m_OverrideState: 0
+    m_Value: {fileID: 0}
+    dimension: 1
+  dirtIntensity:
+    m_OverrideState: 0
+    m_Value: 0
+--- !u!114 &-3142874990067047942
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29fa0085f50d5e54f8144f766051a691, type: 3}
+  m_Name: FilmGrain
+  m_EditorClassIdentifier: 
+  active: 1
+  type:
+    m_OverrideState: 1
+    m_Value: 10
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.093
+  response:
+    m_OverrideState: 1
+    m_Value: 0.805
+  texture:
+    m_OverrideState: 1
+    m_Value: {fileID: 2800000, guid: 441f36eced7375c4a93ec25a49cf7f30, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47,4 +85,42 @@ MonoBehaviour:
   m_Name: Post Process Profile
   m_EditorClassIdentifier: 
   components:
-  - {fileID: -6698920712786703940}
+  - {fileID: -3303332266162483448}
+  - {fileID: 1382935873987287997}
+  - {fileID: -3142874990067047942}
+  - {fileID: 3308766890320683741}
+--- !u!114 &1382935873987287997
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb60a22f311433c4c962b888d1393f88, type: 3}
+  m_Name: PaniniProjection
+  m_EditorClassIdentifier: 
+  active: 1
+  distance:
+    m_OverrideState: 1
+    m_Value: 0.241
+  cropToFit:
+    m_OverrideState: 0
+    m_Value: 1
+--- !u!114 &3308766890320683741
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81180773991d8724ab7f2d216912b564, type: 3}
+  m_Name: ChromaticAberration
+  m_EditorClassIdentifier: 
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.464
