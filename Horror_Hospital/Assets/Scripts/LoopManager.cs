@@ -7,6 +7,7 @@ public enum GameState { Waiting, InProgress, WaitingForReport, WaitingForExit }
 
 public class LoopManager : MonoBehaviour
 {
+
     public static LoopManager Instance;
 
     public int loopCount = 0;
@@ -14,6 +15,10 @@ public class LoopManager : MonoBehaviour
     public AnomalyType currentAnomaly = AnomalyType.None;
     public bool anomalyReported = false;
     public GameState currentState = GameState.Waiting;
+    public Transform player;
+    public Transform playerResetPoint;
+    public FadeManager fadeManager;
+
 
     private List<AnomalyType> loopAnomalies = new List<AnomalyType>();
 
@@ -120,6 +125,7 @@ public class LoopManager : MonoBehaviour
         currentState = GameState.WaitingForReport;
     }
 
+    [SerializeField] private SlidingDoorAuto anomalyDoorController;
     public void ReportAnomaly(bool reportedAsGlitch)
     {
         if (currentState != GameState.WaitingForReport)
@@ -150,6 +156,16 @@ public class LoopManager : MonoBehaviour
 
             Debug.Log(message);
 
+            // ✅ 정답 맞췄을 때 문 열기
+            if (anomalyDoorController != null)
+            {
+                anomalyDoorController.OpenDoors();
+            }
+            else
+            {
+                Debug.LogWarning("❌ anomalyDoorController가 연결되지 않았습니다.");
+            }
+
             // TODO: UI로 플레이어에게 알림
         }
     }
@@ -164,13 +180,43 @@ public class LoopManager : MonoBehaviour
             return;
         }
 
+        StartCoroutine(HandleLoopTransition());
+    }
+    private IEnumerator HandleLoopTransition()
+    {
+        fadeManager.gameObject.SetActive(true);
+
+        // ✅ 조작 차단
+        var controller = player.GetComponent<RigidbodyFPSController>();
+        if (controller != null)
+            controller.canControl = false;
+
+        // 페이드 아웃
+        yield return StartCoroutine(fadeManager.FadeOut());
+
+        // 위치 이동 & 방향 고정
+        player.position = playerResetPoint.position;
+        player.rotation = playerResetPoint.rotation;
+
+        // 페이드 인
+        yield return StartCoroutine(fadeManager.FadeIn());
+
+        yield return null;
+
+        // ✅ 조작 다시 허용
+        if (controller != null)
+            controller.canControl = true;
+
+        fadeManager.gameObject.SetActive(false);
+        
         loopCount++;
-        Debug.Log($"🚶 복도로 퇴장 완료. 다음 루프({loopCount})를 위해 다시 입장하세요.");
+        Debug.Log($"현재 루프: {loopCount}/{maxLoop}");
 
         currentState = GameState.Waiting;
 
-        if (loopCount > maxLoop)
+        if (loopCount >= maxLoop)
         {
+            Debug.Log("✅ 루프 완료! 게임 클리어 실행");
             GameManager.Instance.GameClear();
         }
     }
