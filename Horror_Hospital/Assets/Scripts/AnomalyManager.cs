@@ -8,6 +8,7 @@ public class AnomalyManager : MonoBehaviour
 {
     public static AnomalyManager Instance;
     private Coroutine dialogueCoroutine;
+    private Color[] originalLightColors;
 
     [Header("이상현상 효과")]
     [SerializeField] private Light[] flickeringLights;
@@ -55,7 +56,7 @@ public class AnomalyManager : MonoBehaviour
     private bool anomalyActive = false;
     private float anomalyTimer = 0f;
     private List<GameObject> spawnedPatients = new List<GameObject>();
- 
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -66,7 +67,7 @@ public class AnomalyManager : MonoBehaviour
         {
             mainCamera = Camera.main;
         }
-     
+
     }
 
     private void Update()
@@ -117,7 +118,6 @@ public class AnomalyManager : MonoBehaviour
     {
         Debug.Log($"🔍 ActivateAnomaly: {type}");
         activeAnomaly = type;
-
         // 이전 이상현상 정리
         if (anomalyCoroutine != null)
         {
@@ -131,16 +131,16 @@ public class AnomalyManager : MonoBehaviour
         switch (type)
         {
             case AnomalyType.None:
-            // 튜토리얼/정상 상태 - 아무 이상 없음
+                // 튜토리얼/정상 상태 - 아무 이상 없음
                 Debug.Log("정상 상태 - 이상현상 없음");
 
                 if (LoopManager.Instance.noneAnomalyCount == 1)
                 {
-                    ShowDialogue("It feels quiet. But you can't be too sure.");  
+                    ShowDialogue("It feels quiet. But you can't be too sure.");
                 }
                 else
                 {
-                    ShowDialogue("Still... nothing stands out. Or are you missing something?");  
+                    ShowDialogue("Still... nothing stands out. Or are you missing something?");
                 }
                 break;
 
@@ -172,17 +172,17 @@ public class AnomalyManager : MonoBehaviour
         anomalyTimer = anomalyTimeLimit;
 
         // 조명 원상복구
-        if (flickeringLights != null)
+        if (flickeringLights != null && originalLightColors != null)
         {
-            foreach (Light light in flickeringLights)
+            for (int i = 0; i < flickeringLights.Length; i++)
             {
-                if (light != null)
+                if (flickeringLights[i] != null)
                 {
-                    light.enabled = true;
+                    flickeringLights[i].enabled = true;
+                    flickeringLights[i].color = originalLightColors[i];
                 }
             }
         }
-
         // 카메라 흔들림 중단
         if (cameraShakeCoroutine != null)
         {
@@ -338,6 +338,24 @@ public class AnomalyManager : MonoBehaviour
 
         int spawnCount = 0;
         Debug.Log("🧍‍♂️ 이상현상 B 시작 - 환자가 일정 시간마다 복제됩니다.");
+
+        if (originalLightColors == null && flickeringLights != null)
+        {
+            originalLightColors = new Color[flickeringLights.Length];
+            for (int i = 0; i < flickeringLights.Length; i++)
+            {
+                if (flickeringLights[i] != null)
+                    originalLightColors[i] = flickeringLights[i].color;
+            }
+        }
+
+        for (int i = 0; i < flickeringLights.Length; i++)
+        {
+            if (flickeringLights[i] != null)
+            {
+                flickeringLights[i].color = new Color(0.2f, 0f, 0f); // 어두운 붉은 조명
+            }
+        }
 
         if (breathingSource != null && breathingClip != null)
         {
