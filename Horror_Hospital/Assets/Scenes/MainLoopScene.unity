@@ -1251,6 +1251,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flickeringLights:
   - {fileID: 844096915}
+  - {fileID: 2102574921}
   anomalySoundSource: {fileID: 900979382}
   anomalySounds:
   - {fileID: 8300000, guid: 54e2a6df2c3a58c45865fb95ecde6fc5, type: 3}
@@ -7353,6 +7354,11 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!108 &2102574921 stripped
+Light:
+  m_CorrespondingSourceObject: {fileID: 199307394742063771, guid: 3d1a8f506ae64f240862534efc94c1f3, type: 3}
+  m_PrefabInstance: {fileID: 900979366}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2110790157 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1632989640138634718, guid: 3d1a8f506ae64f240862534efc94c1f3, type: 3}
