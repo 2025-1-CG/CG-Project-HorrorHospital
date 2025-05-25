@@ -1152,7 +1152,7 @@ MonoBehaviour:
   riseHeight: 1
   riseDuration: 50
   anomalyCSoundSource: {fileID: 1937037357}
-  anomalyCSoundClip: {fileID: 8300000, guid: 7b7312030028f284fa43678d879ff462, type: 3}
+  anomalyCSoundClip: {fileID: 8300000, guid: ababb95636bde774294804de4379edf6, type: 3}
   anomalyTimeLimit: 60
   mainCamera: {fileID: 1829109287}
 --- !u!4 &367519032
