@@ -41,32 +41,24 @@ public class LoopManager : MonoBehaviour
     }
 
     private void Update()
-{
-    if (IsButtonLocked)
     {
-        buttonLockTimer -= Time.deltaTime;
-        if (buttonLockTimer <= 0f)
+        if (IsButtonLocked)
         {
-            IsButtonLocked = false;
-            Debug.Log("🔓 버튼 잠금 해제됨");
+            buttonLockTimer -= Time.deltaTime;
+            if (buttonLockTimer <= 0f)
+            {
+                IsButtonLocked = false;
+                Debug.Log("🔓 버튼 잠금 해제됨");
+            }
         }
     }
-}
     // 문이 완전히 닫혔을 때 호출됨 (DoorController에서 호출)
     public void OnDoorClosed()
     {
         if (currentState == GameState.Waiting)
         {
-            if (loopCount == 0)
-            {
-                Debug.Log("문이 닫혔습니다. 튜토리얼 루프를 시작합니다.");
-                StartLoop();
-            }
-            else
-            {
-                Debug.Log($"문이 닫혔습니다. 루프 {loopCount}를 시작합니다.");
-                StartNextLoop();
-            }
+            Debug.Log($"문이 닫혔습니다. 루프 {loopCount}를 시작합니다.");
+            StartNextLoop();
         }
     }
 
@@ -74,43 +66,23 @@ public class LoopManager : MonoBehaviour
     {
         loopAnomalies.Clear();
 
-        // 2개는 튜토리얼(None)
+        // 1. None 두 개 고정
         loopAnomalies.Add(AnomalyType.None);
         loopAnomalies.Add(AnomalyType.None);
 
-        // 3개는 랜덤 A/B/C
-        List<AnomalyType> anomalies = new List<AnomalyType> {
-        AnomalyType.A,
-        AnomalyType.B,
-        AnomalyType.C
-    };
+        // 2. A, B, C 각각 하나씩 추가
+        loopAnomalies.Add(AnomalyType.A);
+        loopAnomalies.Add(AnomalyType.B);
+        loopAnomalies.Add(AnomalyType.C);
 
-        for (int i = 0; i < 10; i++) // 셔플
+        // 3. 셔플
+        for (int i = 0; i < loopAnomalies.Count; i++)
         {
-            int i1 = Random.Range(0, anomalies.Count);
-            int i2 = Random.Range(0, anomalies.Count);
-            (anomalies[i1], anomalies[i2]) = (anomalies[i2], anomalies[i1]);
+            int j = Random.Range(i, loopAnomalies.Count);
+            (loopAnomalies[i], loopAnomalies[j]) = (loopAnomalies[j], loopAnomalies[i]);
         }
 
-        loopAnomalies.AddRange(anomalies);
-
-        // 전체 셔플 (튜토리얼과 이상현상 뒤섞기)
-        for (int i = 0; i < 10; i++)
-        {
-            int i1 = Random.Range(0, loopAnomalies.Count);
-            int i2 = Random.Range(0, loopAnomalies.Count);
-            (loopAnomalies[i1], loopAnomalies[i2]) = (loopAnomalies[i2], loopAnomalies[i1]);
-        }
-
-        Debug.Log("✅ 루프 순서: " + string.Join(", ", loopAnomalies));
-    }
-
-    public void StartLoop()
-    {
-        loopCount = 0;
-        currentState = GameState.InProgress;
-        Debug.Log("🎮 게임 시작");
-        StartNextLoop();
+        Debug.Log("✅ 루프 순서 (None 2개 + A/B/C 랜덤): " + string.Join(", ", loopAnomalies));
     }
 
     public void StartNextLoop()
@@ -119,7 +91,7 @@ public class LoopManager : MonoBehaviour
         anomalyReported = false;
 
         buttonLockTimer = buttonLockDuration;
-    IsButtonLocked = true;
+        IsButtonLocked = true;
 
         // 모든 이상현상 트리거 영역 리셋
         ResetAllTriggerZones();
@@ -238,7 +210,7 @@ public class LoopManager : MonoBehaviour
 
         currentState = GameState.Waiting;
 
-        if (loopCount >= maxLoop)
+        if (loopCount > maxLoop)
         {
             Debug.Log("✅ 루프 완료! 게임 클리어 실행");
             GameManager.Instance.GameClear();

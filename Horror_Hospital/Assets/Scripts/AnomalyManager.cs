@@ -68,6 +68,16 @@ public class AnomalyManager : MonoBehaviour
             mainCamera = Camera.main;
         }
 
+        if (flickeringLights != null)
+        {
+            originalLightColors = new Color[flickeringLights.Length];
+            for (int i = 0; i < flickeringLights.Length; i++)
+            {
+                if (flickeringLights[i] != null)
+                    originalLightColors[i] = flickeringLights[i].color;
+            }
+        }
+
     }
 
     private void Update()
@@ -117,7 +127,6 @@ public class AnomalyManager : MonoBehaviour
     public void ActivateAnomaly(AnomalyType type)
     {
         Debug.Log($"🔍 ActivateAnomaly: {type}");
-        activeAnomaly = type;
         // 이전 이상현상 정리
         if (anomalyCoroutine != null)
         {
@@ -126,6 +135,7 @@ public class AnomalyManager : MonoBehaviour
         }
 
         ResetAllAnomalies();
+        activeAnomaly = type;
 
         // 이상현상 타입에 따른 연출 처리
         switch (type)
@@ -338,16 +348,6 @@ public class AnomalyManager : MonoBehaviour
 
         int spawnCount = 0;
         Debug.Log("🧍‍♂️ 이상현상 B 시작 - 환자가 일정 시간마다 복제됩니다.");
-
-        if (originalLightColors == null && flickeringLights != null)
-        {
-            originalLightColors = new Color[flickeringLights.Length];
-            for (int i = 0; i < flickeringLights.Length; i++)
-            {
-                if (flickeringLights[i] != null)
-                    originalLightColors[i] = flickeringLights[i].color;
-            }
-        }
 
         for (int i = 0; i < flickeringLights.Length; i++)
         {
