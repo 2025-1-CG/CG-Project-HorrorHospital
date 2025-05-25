@@ -10,9 +10,6 @@ public class StartManager : MonoBehaviour
     public TextMeshProUGUI guideText;
     public GameObject crossHairCanvas;
 
-    [Header("🔊 오디오")]
-    public AudioSource bgm;
-
     [Header("🎮 플레이어")]
     public RigidbodyFPSController playerController;
 
@@ -30,7 +27,10 @@ public class StartManager : MonoBehaviour
         guideText.gameObject.SetActive(false);
         crossHairCanvas.SetActive(false);
         playerController.canControl = false;
-        bgm.Play();
+
+        // BGM 시작 (처음은 크게)
+        BGMManager.Instance.SetVolume(1.0f);
+        BGMManager.Instance.Play();
 
         StartCoroutine(PlayIntroSequence());
     }
@@ -50,12 +50,12 @@ public class StartManager : MonoBehaviour
 
         yield return FadeIn(canvasGroup, titleFadeInDuration);
 
-        // 타이핑 효과 실행 (Fade 없음)
+        // 타이핑 효과 실행
         yield return typewriterEffect.PlayTyping(guideText,
-    "Enter the operation room.\n\n" +
-    "Once the door shuts behind you, stay alert.\n\n" +
-    "If everything feels normal, press the green button and leave.\n\n" +
-    "But if something feels... off — hit the red button and get out. Fast.");
+            "Enter the operation room.\n\n" +
+            "Once the door shuts behind you, stay alert.\n\n" +
+            "If everything feels normal, press the green button and leave.\n\n" +
+            "But if something feels... off — hit the red button and get out. Fast.");
 
         yield return new WaitForSeconds(guideHoldDuration);
         yield return FadeOut(canvasGroup, titleFadeOutDuration);
@@ -63,7 +63,8 @@ public class StartManager : MonoBehaviour
         guideText.gameObject.SetActive(false);
         canvasGroup.gameObject.SetActive(false);
 
-        yield return FadeOutAudio(bgm, 1f);
+        // BGM 줄이기 (잔잔하게 유지)
+        BGMManager.Instance.FadeTo(0.1f, 1.2f);
 
         playerController.canControl = true;
         crossHairCanvas.SetActive(true);
@@ -92,19 +93,5 @@ public class StartManager : MonoBehaviour
             yield return null;
         }
         cg.alpha = 0;
-    }
-
-    private IEnumerator FadeOutAudio(AudioSource audioSource, float duration)
-    {
-        float startVolume = audioSource.volume;
-        float t = 0f;
-        while (t < duration)
-        {
-            audioSource.volume = Mathf.Lerp(startVolume, 0f, t / duration);
-            t += Time.deltaTime;
-            yield return null;
-        }
-        audioSource.Stop();
-        audioSource.volume = startVolume;
     }
 }
