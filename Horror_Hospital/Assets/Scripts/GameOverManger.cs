@@ -3,14 +3,15 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using TMPro;
-using static System.Net.Mime.MediaTypeNames;
 
 public class GameOverManager : MonoBehaviour
 {
+
     [Header("UI Elements")]
     public Canvas gameOverCanvas;
-    public UnityEngine.UI.Image fadePanel;
-    public TextMeshProUGUI gameOverText;
+    public Image fadePanel;
+    public TextMeshProUGUI titleText;
+    public TextMeshProUGUI subText;
 
     [Header("Settings")]
     public float fadeDuration = 2f;
@@ -22,31 +23,24 @@ public class GameOverManager : MonoBehaviour
     public KeyCode exitKey = KeyCode.Escape;
 
     [Header("Visual Styling")]
-    public Color successColor = new Color(0.2f, 0.8f, 0.2f, 1f); // ¹àÀº ÃÊ·Ï
-    public Color failureColor = new Color(0.9f, 0.2f, 0.2f, 1f); // ¹àÀº »¡°­
-    public Color instructionColor = new Color(0.8f, 0.8f, 0.8f, 1f); // ¿¬ÇÑ È¸»ö
+    public Color successColor = new Color(0.2f, 0.8f, 0.2f, 1f);
+    public Color failureColor = new Color(0.9f, 0.2f, 0.2f, 1f);
+    public Color instructionColor = new Color(0.8f, 0.8f, 0.8f, 1f);
     public float textGlowIntensity = 2f;
     public float titlePulseSpeed = 2f;
     public float textShadowOffset = 3f;
 
     private bool gameOverActive = false;
-    private Color originalTextColor;
     private bool isSuccess;
 
     void Start()
     {
-        // ½ÃÀÛÇÒ ¶§´Â Game Over UI¸¦ ¼û±è
         gameOverCanvas.gameObject.SetActive(false);
         fadePanel.color = new Color(0, 0, 0, 0);
-
-        // ¿ø·¡ ÅØ½ºÆ® »ö»ó ÀúÀå
-        if (gameOverText != null)
-            originalTextColor = gameOverText.color;
     }
 
     void Update()
     {
-        // °ÔÀÓ¿À¹ö »óÅÂ¿¡¼­ Å°º¸µå ÀÔ·Â Ã³¸®
         if (gameOverActive)
         {
             if (Input.GetKeyDown(retryKey))
@@ -58,6 +52,18 @@ public class GameOverManager : MonoBehaviour
                 ExitGame();
             }
         }
+#if UNITY_EDITOR
+    if (Input.GetKeyDown(KeyCode.G))
+    {
+        ShowGameOver(false);
+    }
+#endif
+#if UNITY_EDITOR
+    if (Input.GetKeyDown(KeyCode.P))
+    {
+        ShowGameOver(true);
+    }
+#endif
     }
 
     public void ShowGameOver(bool success)
@@ -68,106 +74,79 @@ public class GameOverManager : MonoBehaviour
 
     void SetupTextStyling(bool success)
     {
-        if (gameOverText == null) return;
+        titleText.text = success ? successMessage : failureMessage;
+        subText.text = "[R] RETRY\n[ESC] EXIT";
 
-        // ÅØ½ºÆ® Å©±â¿Í Á¤·Ä
-        gameOverText.fontSize = success ? 72f : 64f;
-        gameOverText.fontStyle = FontStyles.Bold;
-        gameOverText.alignment = TextAlignmentOptions.Center;
+        titleText.color = success ? successColor : failureColor;
+        subText.color = instructionColor;
 
-        // ±×¸²ÀÚ È¿°ú
-        gameOverText.fontMaterial = CreateTextMaterial(success);
+        titleText.fontStyle = FontStyles.Bold;
+        titleText.alignment = TextAlignmentOptions.Center;
 
-        // ÅØ½ºÆ® »ö»ó
-        gameOverText.color = success ? successColor : failureColor;
+        titleText.fontMaterial = CreateTextMaterial(success);
 
-        // ±Û·Î¿ì È¿°ú¸¦ À§ÇÑ Outline ¼³Á¤
-        gameOverText.outlineWidth = 0.2f;
-        gameOverText.outlineColor = success ?
+        titleText.outlineWidth = 0.2f;
+        titleText.outlineColor = success ?
             new Color(successColor.r, successColor.g, successColor.b, 0.5f) :
             new Color(failureColor.r, failureColor.g, failureColor.b, 0.5f);
     }
 
     Material CreateTextMaterial(bool success)
     {
-        Material newMat = new Material(gameOverText.fontMaterial);
+        Material newMat = new Material(titleText.fontMaterial);
 
-        // ¾ð´õ·¹ÀÌ ¼³Á¤
         newMat.SetFloat("_UnderlayOffsetX", textShadowOffset);
         newMat.SetFloat("_UnderlayOffsetY", -textShadowOffset);
         newMat.SetFloat("_UnderlayDilate", 0.5f);
         newMat.SetColor("_UnderlayColor", new Color(0, 0, 0, 0.8f));
 
-        // ±Û·Î¿ì È¿°ú
         newMat.SetFloat("_GlowPower", textGlowIntensity);
         newMat.SetColor("_GlowColor", success ? successColor : failureColor);
 
         return newMat;
     }
 
-    string FormatGameOverText(bool success)
-    {
-        // ¼º°ø or ½ÇÆÐ ¸Þ½ÃÁö
-        string mainMessage = success ? successMessage : failureMessage;
-        string formattedMain = $"<size=120%><b>{mainMessage}</b></size>";
-
-        // Àç½ÃÀÛ or °ÔÀÓ Á¾·á
-        string instructions = $"\n\n<size=60%><color=#{ColorUtility.ToHtmlStringRGB(instructionColor)}>" +
-                            $"<b>[R]</b> RETRY GAME\n" +
-                            $"<b>[Esc]</b> EXIT GAME\n" +
-                            $"</color></size>";
-
-        return formattedMain + instructions;
-    }
-
     IEnumerator GameOverSequence(bool success)
     {
         gameOverActive = true;
-
-        // °ÔÀÓ ÀÏ½ÃÁ¤Áö
         Time.timeScale = 0f;
 
-        // Canvas È°¼ºÈ­
         gameOverCanvas.gameObject.SetActive(true);
-
-        // ÅØ½ºÆ® ½ºÅ¸ÀÏ¸µ ¼³Á¤
         SetupTextStyling(success);
 
-        // Æ÷¸ËµÈ ¸Þ½ÃÁö ¼³Á¤
-        gameOverText.text = FormatGameOverText(success);
+        // ì´ˆê¸° íˆ¬ëª… ì„¤ì •
+        Color titleColor = titleText.color;
+        titleColor.a = 0;
+        titleText.color = titleColor;
 
-        // ÅØ½ºÆ®¸¦ Ã³À½¿¡´Â Åõ¸íÇÏ°Ô
-        Color textColor = gameOverText.color;
-        textColor.a = 0;
-        gameOverText.color = textColor;
+        Color subColor = subText.color;
+        subColor.a = 0;
+        subText.color = subColor;
 
-        // ¹è°æ ÆäÀÌµåÀÎ°ú ÇÔ²² ÅØ½ºÆ®µµ ÆäÀÌµåÀÎ
         float elapsedTime = 0f;
         while (elapsedTime < fadeDuration)
         {
             elapsedTime += Time.unscaledDeltaTime;
             float progress = elapsedTime / fadeDuration;
-
             float easedProgress = EaseOutQuart(progress);
 
-            // ¹è°æ ÆäÀÌµåÀÎ
+            // ë°°ê²½ íŽ˜ì´ë“œ ì¸
             Color bgColor = fadePanel.color;
             bgColor.a = easedProgress * 0.85f;
             fadePanel.color = bgColor;
 
-            // ÅØ½ºÆ® ÆäÀÌµåÀÎ (¹è°æº¸´Ù Á¶±Ý ´Ê°Ô ½ÃÀÛ)
-            float textProgress = Mathf.Clamp01((progress - 0.3f) / 0.7f);
-            textColor = success ? successColor : failureColor;
-            textColor.a = EaseOutQuart(textProgress);
-            gameOverText.color = textColor;
+            // íƒ€ì´í‹€ íŽ˜ì´ë“œ ì¸
+            float titleAlpha = EaseOutQuart(Mathf.Clamp01((progress - 0.2f) / 0.5f));
+            titleColor.a = titleAlpha;
+            titleText.color = titleColor;
+
+            // ì„œë¸Œ í…ìŠ¤íŠ¸ íŽ˜ì´ë“œ ì¸
+            float subAlpha = EaseOutQuart(Mathf.Clamp01((progress - 0.5f) / 0.4f));
+            subColor.a = subAlpha;
+            subText.color = subColor;
 
             yield return null;
         }
-
-        // ÃÖÁ¾ »óÅÂ ¼³Á¤
-        gameOverText.transform.localScale = Vector3.one;
-
-        yield break;
     }
 
     float EaseOutQuart(float t)
@@ -195,7 +174,7 @@ public class GameOverManager : MonoBehaviour
         Time.timeScale = 1f;
 
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
+        UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
