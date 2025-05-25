@@ -31,6 +31,8 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private Transform[] spawnPoints;
     [SerializeField] private float spawnInterval = 3f;
     [SerializeField] private int maxPatientCount = 5;
+    [SerializeField] private AudioSource breathingSource;
+    [SerializeField] private AudioClip breathingClip;
 
     [Header("이상현상 C - 붉은 물 상승")]
     [SerializeField] private GameObject redLiquidObject;
@@ -39,7 +41,6 @@ public class AnomalyManager : MonoBehaviour
     [SerializeField] private AudioSource anomalyCSoundSource;
     [SerializeField] private AudioClip anomalyCSoundClip;
     private Vector3 redLiquidStartPos;
-
 
     [Header("제한 시간")]
     [SerializeField] private float anomalyTimeLimit = 60f; // 이상현상 발견 후 버튼 누르기까지 제한시간 (초)
@@ -54,8 +55,7 @@ public class AnomalyManager : MonoBehaviour
     private bool anomalyActive = false;
     private float anomalyTimer = 0f;
     private List<GameObject> spawnedPatients = new List<GameObject>();
-
-
+ 
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -66,6 +66,7 @@ public class AnomalyManager : MonoBehaviour
         {
             mainCamera = Camera.main;
         }
+     
     }
 
     private void Update()
@@ -74,25 +75,25 @@ public class AnomalyManager : MonoBehaviour
     // 디버그 단축키 - A, B, C 이상현상 수동 실행
     if (Input.GetKeyDown(KeyCode.Alpha1))
     {
-        Debug.Log("🔵 테스트: 이상현상 A 실행");
+        Debug.Log(" 테스트: 이상현상 A 실행");
         ActivateAnomaly(AnomalyType.A);
     }
 
     if (Input.GetKeyDown(KeyCode.Alpha2))
     {
-        Debug.Log("🟢 테스트: 이상현상 B 실행");
+        Debug.Log(" 테스트: 이상현상 B 실행");
         ActivateAnomaly(AnomalyType.B);
     }
 
     if (Input.GetKeyDown(KeyCode.Alpha3))
     {
-        Debug.Log("🔴 테스트: 이상현상 C 실행");
+        Debug.Log(" 테스트: 이상현상 C 실행");
         ActivateAnomaly(AnomalyType.C);
     }
 
     if (Input.GetKeyDown(KeyCode.R))
     {
-        Debug.Log("🔁 테스트: 이상현상 리셋");
+        Debug.Log(" 테스트: 이상현상 리셋");
         StopAllAnomalies();
     }
 #endif
@@ -223,6 +224,13 @@ public class AnomalyManager : MonoBehaviour
             }
             spawnedPatients.Clear();
         }
+
+        // 숨 소리 중지
+        if (breathingSource != null)
+        {
+            breathingSource.Stop();
+        }
+
         // 물 내려감
         if (redLiquidObject != null)
         {
@@ -323,6 +331,14 @@ public class AnomalyManager : MonoBehaviour
         int spawnCount = 0;
         Debug.Log("🧍‍♂️ 이상현상 B 시작 - 환자가 일정 시간마다 복제됩니다.");
 
+        if (breathingSource != null && breathingClip != null)
+        {
+            breathingSource.clip = breathingClip;
+            breathingSource.loop = true;
+            breathingSource.Play();
+            Debug.Log("🎧 breathingSource 숨소리 재생됨");
+        }
+
         while (anomalyActive && spawnCount < maxPatientCount)
         {
             int randomIndex = Random.Range(0, spawnPoints.Length);
@@ -338,8 +354,12 @@ public class AnomalyManager : MonoBehaviour
             spawnCount++;
             yield return new WaitForSeconds(spawnInterval);
         }
+        Debug.Log("숨소리 재생");
 
         Debug.Log("🧍‍♂️ 이상현상 B 완료 - 최대 환자 수에 도달했습니다.");
+
+        yield break;
+
     }
 
     // 이상현상 타입 C: 물 차오름
